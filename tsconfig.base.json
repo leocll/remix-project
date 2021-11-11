@@ -67,7 +67,7 @@
       "@remix-ui/editor": ["libs/remix-ui/editor/src/index.ts"],
       "@remix-ui/tabs": ["libs/remix-ui/tabs/src/index.ts"],
       "@remix-ui/helper": ["libs/remix-ui/helper/src/index.ts"],
-      "@remix-ui/solidityUnitTesting": [
+      "@remix-ui/solidity-unit-testing": [
         "libs/remix-ui/solidity-unit-testing/src/index.ts"
       ]
     }

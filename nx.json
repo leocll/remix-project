@@ -136,7 +136,7 @@
     "remix-ui-tabs": {
       "tags": []
     },
-    "remix-ui-solidity-unit-testing": {
+    "solidity-unit-testing": {
       "tags": []
     }
   }
