@@ -18,7 +18,7 @@ import { VerticalIcons } from './app/components/vertical-icons'
 import { LandingPage } from './app/ui/landing-page/landing-page'
 import { MainPanel } from './app/components/main-panel'
 
-import { OffsetToLineColumnConverter, CompilerMetadata, CompilerArtefacts, FetchAndCompile, CompilerImports } from '@remix-project/core-plugin'
+import { OffsetToLineColumnConverter, CompilerMetadata, CompilerArtefacts, FetchAndCompile, CompilerImports, EditorContextListener } from '@remix-project/core-plugin'
 
 import migrateFileSystem from './migrateFileSystem'
 
@@ -53,7 +53,6 @@ const TestTab = require('./app/tabs/test-tab')
 const FilePanel = require('./app/panels/file-panel')
 const Editor = require('./app/editor/editor')
 const Terminal = require('./app/panels/terminal')
-const ContextualListener = require('./app/editor/contextualListener')
 const _paq = window._paq = window._paq || []
 
 const css = csjs`
@@ -297,7 +296,7 @@ class App {
         }
       }
     )
-    const contextualListener = new ContextualListener({ editor })
+    const contextualListener = new EditorContextListener()
 
     engine.register([
       blockchain,

@@ -13,7 +13,7 @@ const css = require('./styles/contextView-styles')
    - rename declaration/references
 */
 class ContextView {
-  constructor (opts, localRegistry) {
+  constructor () {
     this._components = {}
     this._components.registry = localRegistry || globalRegistry
     this.contextualListener = opts.contextualListener

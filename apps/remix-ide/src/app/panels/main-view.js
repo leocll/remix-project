@@ -19,7 +19,7 @@ var css = csjs`
 
 // @todo(#650) Extract this into two classes: MainPanel (TabsProxy + Iframe/Editor) & BottomPanel (Terminal)
 export class MainView {
-  constructor (contextualListener, editor, mainPanel, fileManager, appManager, terminal) {
+  constructor (editor, mainPanel, fileManager, appManager, terminal) {
     var self = this
     self.event = new EventManager()
     self._view = {}
@@ -30,7 +30,6 @@ export class MainView {
     self.mainPanel = mainPanel
     self.txListener = globalRegistry.get('txlistener').api
     self._components.terminal = terminal
-    self._components.contextualListener = contextualListener
     this.appManager = appManager
     this.init()
   }
@@ -90,7 +89,7 @@ export class MainView {
       }
     }
 
-    const contextView = new ContextView({ contextualListener: self._components.contextualListener, editor: self.editor })
+    const contextView = new ContextView()
 
     self._components.contextView = contextView
 

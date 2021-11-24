@@ -1,47 +1,46 @@
 'use strict'
 import { Plugin } from '@remixproject/engine'
-import * as packageJson from '../../../../../package.json'
 
 import { sourceMappingDecoder } from '@remix-project/remix-debug'
 const { AstWalker } = require('@remix-project/remix-astwalker')
-const EventManager = require('../../lib/events')
-const globalRegistry = require('../../global/registry')
 
 const profile = {
   name: 'contextualListener',
   methods: [],
   events: [],
-  version: packageJson.version
+  version: '0.0.1'
 }
 
 /*
   trigger contextChanged(nodes)
 */
-class ContextualListener extends Plugin {
-  constructor (opts) {
+export class EditorContextListener extends Plugin {
+  _index: any
+  _activeHighlights: Array<any>
+  astWalker: any
+  currentPosition: any
+  currentFile: String
+  nodes: Array<any>
+  results: any
+  estimationObj: any
+  creationCost: any
+  codeDepositCost: any
+  contract: any
+
+  constructor () {
     super(profile)
-    this.event = new EventManager()
-    this._components = {}
-    this._components.registry = globalRegistry
-    this.editor = opts.editor
-    this.pluginManager = opts.pluginManager
-    this._deps = {
-      compilersArtefacts: this._components.registry.get('compilersartefacts').api,
-      config: this._components.registry.get('config').api,
-      offsetToLineColumnConverter: this._components.registry.get('offsettolinecolumnconverter').api
-    }
     this._index = {
       Declarations: {},
       FlatReferences: {}
     }
-    this._activeHighlights = []
-    this.editor.event.register('contentChanged', () => { this._stopHighlighting() })
+    this._activeHighlights = []    
 
-    this.sourceMappingDecoder = sourceMappingDecoder
     this.astWalker = new AstWalker()
   }
 
   onActivation () {
+    this.on('editor', 'contentChanged', () => { this._stopHighlighting() })
+
     this.on('solidity', 'compilationFinished', (file, source, languageVersion, data) => {
       if (languageVersion.indexOf('soljson') !== 0) return
       this._stopHighlighting()
@@ -52,9 +51,14 @@ class ContextualListener extends Plugin {
       this._buildIndex(data, source)
     })
 
-    setInterval(() => {
-      if (this._deps.compilersArtefacts.__last && this._deps.compilersArtefacts.__last.languageversion.indexOf('soljson') === 0) {
-        this._highlightItems(this.editor.getCursorPosition(), this._deps.compilersArtefacts.__last, this._deps.config.get('currentFile'))
+    setInterval(async () => {
+      const compilationResult = await this.call('compilerArtefacts', 'getLastCompilationResult')
+      if (compilationResult && compilationResult.languageversion.indexOf('soljson') === 0) {
+        this._highlightItems(
+            await this.call('editor', 'getCursorPosition'), 
+            compilationResult, 
+            await this.call('fileManager', 'file')
+        )
       }
     }, 1000)
   }
@@ -85,12 +89,12 @@ class ContextualListener extends Plugin {
     this.currentPosition = cursorPosition
     this.currentFile = file
     if (compilationResult && compilationResult.data && compilationResult.data.sources[file]) {
-      const nodes = this.sourceMappingDecoder.nodesAtPosition(null, cursorPosition, compilationResult.data.sources[file])
+      const nodes = sourceMappingDecoder.nodesAtPosition(null, cursorPosition, compilationResult.data.sources[file])
       this.nodes = nodes
       if (nodes && nodes.length && nodes[nodes.length - 1]) {
         this._highlightExpressions(nodes[nodes.length - 1], compilationResult)
       }
-      this.event.trigger('contextChanged', [nodes])
+      this.emit('contextChanged', nodes)
     }
   }
 
@@ -111,21 +115,19 @@ class ContextualListener extends Plugin {
     }
   }
 
-  _highlight (node, compilationResult) {
+  async _highlight (node, compilationResult) {
     if (!node) return
-    const position = this.sourceMappingDecoder.decode(node.src)
-    const eventId = this._highlightInternal(position, node)
-    const lastCompilationResult = this._deps.compilersArtefacts.__last
-    if (eventId && lastCompilationResult && lastCompilationResult.languageversion.indexOf('soljson') === 0) {
-      this._activeHighlights.push({ eventId, position, fileTarget: lastCompilationResult.getSourceName(position.file), nodeId: node.id })
+    const position = sourceMappingDecoder.decode(node.src)
+    const eventId = await this._highlightInternal(position, node, compilationResult)
+    if (eventId && compilationResult && compilationResult.languageversion.indexOf('soljson') === 0) {
+      this._activeHighlights.push({ eventId, position, fileTarget: compilationResult.getSourceName(position.file), nodeId: node.id })
     }
   }
 
-  _highlightInternal (position, node) {
+  async _highlightInternal (position, node, compilationResult) {
     if (node.nodeType === 'Block') return
-    const lastCompilationResult = this._deps.compilersArtefacts.__last
-    if (lastCompilationResult && lastCompilationResult.languageversion.indexOf('soljson') === 0) {
-      let lineColumn = this._deps.offsetToLineColumnConverter.offsetToLineColumn(position, position.file, lastCompilationResult.getSourceCode().sources, lastCompilationResult.getAsts())
+    if (compilationResult && compilationResult.languageversion.indexOf('soljson') === 0) {
+      let lineColumn = await this.call('offsetToLineColumnConverter', 'offsetToLineColumn', position, position.file, compilationResult.getSourceCode().sources, compilationResult.getAsts())
       if (node.nodes && node.nodes.length) {
         // If node has children, highlight the entire line. if not, just highlight the current source position of the node.
         lineColumn = {
@@ -139,9 +141,9 @@ class ContextualListener extends Plugin {
           }
         }
       }
-      const fileName = lastCompilationResult.getSourceName(position.file)
+      const fileName = compilationResult.getSourceName(position.file)
       if (fileName) {
-        return this.call('editor', 'highlight', lineColumn, fileName, '', { focus: false })
+        return await this.call('editor', 'highlight', lineColumn, fileName, '', { focus: false })
       }
     }
     return null
@@ -170,7 +172,7 @@ class ContextualListener extends Plugin {
 
   _stopHighlighting () {
     this.call('editor', 'discardHighlight')
-    this.event.trigger('stopHighlighting', [])
+    this.emit('stopHighlighting')
     this._activeHighlights = []
   }
 
@@ -229,5 +231,3 @@ class ContextualListener extends Plugin {
     return '(' + params.toString() + ')'
   }
 }
-
-module.exports = ContextualListener
