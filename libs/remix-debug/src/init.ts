@@ -62,6 +62,16 @@ export function extend (web3) {
       params: 5
     }))
   }
+
+  if (!(web3.debug && web3.debug.getDebugInfo)) {
+    methods.push(new web3.extend.Method({
+      name: 'getDebugInfo',
+      call: 'debug_getDebugInfo',
+      inputFormatter: [],
+      params: 0
+    }))
+  }
+
   if (methods.length > 0) {
     web3.extend({
       property: 'debug',

@@ -60,6 +60,7 @@ export class Web3VmProvider {
     this.debug.traceTransaction = (txHash, options, cb) => this.traceTransaction(txHash, options, cb)
     this.debug.storageRangeAt = (blockNumber, txIndex, address, start, maxLength, cb) => this.storageRangeAt(blockNumber, txIndex, address, start, maxLength, cb)
     this.debug.preimage = (hashedKey, cb) => this.preimage(hashedKey, cb)
+    this.debug.getDebugInfo = (cb) => this.getDebugInfo(cb)
     this.providers = { HttpProvider: function (url) {} }
     this.currentProvider = { host: 'vm provider' }
     this.storageCache = {}
@@ -345,6 +346,34 @@ export class Web3VmProvider {
   preimage (hashedKey, cb) {
     hashedKey = hashedKey.replace('0x', '')
     cb(null, this.sha3Preimages[hashedKey] !== undefined ? this.sha3Preimages[hashedKey].preimage : null)
+  }
+
+  getDebugInfo(cb) {
+    const getCodes = (addresses, codes, ccb) => {
+      if (addresses.length > 0) {
+        const address = addresses[0]
+        this.getCode(address, (error, code) => {
+          if (!error) {
+            codes[address] = code
+          }
+          getCodes(addresses.slice(1), codes, ccb)
+        })
+      } else {
+        ccb(codes)
+      }
+    }
+    const addrs = Object.values(this.txs).map(a => a['to'] || undefined).filter(a => a)
+    getCodes(addrs, {}, (codes) => {
+      /**@typedef {{txs: {[txHash: String]: Object, txTraces: {[txHash: String]: Object}, storage: {[txHash: String]: {[address: String]: Object}}}}} */
+      const info = {
+        codes,
+        txs: this.txs,
+        txTraces: this.vmTraces,
+        storages: this.storageCache,
+        preimages: this.sha3Preimages,
+      }
+      cb(null, info)
+    })
   }
 
   getSha3Input (stack, memory) {
