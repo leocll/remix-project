@@ -350,8 +350,8 @@ export class Web3VmProvider {
 
   getDebugInfo(cb) {
     const getCodes = (addresses, codes, ccb) => {
-      if (addresses.length > 0) {
-        const address = addresses[0]
+      const address = addresses[0]
+      if (addresses.length > 0 && !codes[address]) {
         this.getCode(address, (error, code) => {
           if (!error) {
             codes[address] = code
@@ -362,7 +362,7 @@ export class Web3VmProvider {
         ccb(codes)
       }
     }
-    const addrs = Object.values(this.txs).map(a => a['to'] || undefined).filter(a => a)
+    const addrs = Object.values(this.txs).map(a => a['to'] || a['contractAddress'] || undefined).filter(a => a)
     getCodes(addrs, {}, (codes) => {
       /**@typedef {{txs: {[txHash: String]: Object, txTraces: {[txHash: String]: Object}, storage: {[txHash: String]: {[address: String]: Object}}}}} */
       const info = {
