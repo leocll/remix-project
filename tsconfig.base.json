@@ -68,7 +68,8 @@
       "@remix-ui/tabs": ["libs/remix-ui/tabs/src/index.ts"],
       "@remix-ui/helper": ["libs/remix-ui/helper/src/index.ts"],
       "@remix-ui/main-panel": ["libs/remix-ui/main-panel/src/index.ts"],
-      "@remix-ui/abstract-panel": ["libs/remix-ui/abstract-panel/src/index.ts"]
+      "@remix-ui/abstract-panel": ["libs/remix-ui/abstract-panel/src/index.ts"],
+      "@remix-ui/side-panel": ["libs/remix-ui/side-panel/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
