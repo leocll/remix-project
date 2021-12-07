@@ -351,13 +351,17 @@ export class Web3VmProvider {
   getDebugInfo(cb) {
     const getCodes = (addresses, codes, ccb) => {
       const address = addresses[0]
-      if (addresses.length > 0 && !codes[address]) {
-        this.getCode(address, (error, code) => {
-          if (!error) {
-            codes[address] = code
-          }
+      if (addresses.length > 0) {
+        if (!codes[address]) {
+          this.getCode(address, (error, code) => {
+            if (!error) {
+              codes[address] = code
+            }
+            getCodes(addresses.slice(1), codes, ccb)
+          })
+        } else {
           getCodes(addresses.slice(1), codes, ccb)
-        })
+        }
       } else {
         ccb(codes)
       }
