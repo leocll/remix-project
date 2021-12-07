@@ -27,7 +27,7 @@
   "scripts": {
     "nx": "nx",
     "start": "nx start",
-    "serve": "nx serve",
+    "serve": "nx serve --host 0.0.0.0",
     "build": "nx build",
     "test": "nx test",
     "lint": "nx lint",
