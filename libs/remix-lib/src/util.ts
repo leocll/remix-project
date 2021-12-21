@@ -34,7 +34,7 @@ export function hexToIntArray (hexString) {
   */
 export function hexListFromBNs (bnList) {
   const ret = []
-  for (const k in bnList) {
+  for (let k = 0; k < bnList.length; k++) {
     const v = bnList[k]
     if (BN.isBN(v)) {
       ret.push('0x' + v.toString('hex', 64))
@@ -257,7 +257,7 @@ function findCallInternal (index, rootCall, callsPath) {
   const calls = Object.keys(rootCall.calls)
   const ret = rootCall
   callsPath.push(rootCall)
-  for (const k in calls) {
+  for (let k = 0; k < calls.length; k++) {
     const subCall = rootCall.calls[calls[k]]
     if (index >= subCall.start && index <= subCall.return) {
       findCallInternal(index, subCall, callsPath)
